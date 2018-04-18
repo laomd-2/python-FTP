@@ -1,12 +1,13 @@
 from socketserver import *
+from utility.SocketHelper import SocketHelper
 
 
 class MyServer(BaseRequestHandler):
     """docstring for MyServer"""
 
     def handle(self):
-        with open("a.txt", 'wb') as file:
-            line = self.request.recv(1024)
+        with open("b.txt", 'w') as file:
+            line = SocketHelper.recv(self.request, 1024)
             file.write(line)
 
 

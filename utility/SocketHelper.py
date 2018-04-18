@@ -9,9 +9,10 @@ class SocketHelper(object):
                  并利用src_socket发送一个未转成bytes的对象
            返回值: 发送的字节数"""
         try:
-            src_socket.send(some_object)
-        except TypeError:
-            src_socket.send(json.dumps(some_object).encode())
+            some_object.decode()
+        except AttributeError:
+            some_object = json.dumps(some_object).encode()
+        return src_socket.send(some_object)
 
     @staticmethod
     def recv(src_socket, buffersize):
