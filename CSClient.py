@@ -1,11 +1,17 @@
-from socket import *
-from utility.SocketHelper import SocketHelper
+from utility.handlers import ResponseHandler
+
+
+class CSClient(ResponseHandler):
+    """docstring for CSClient"""
+
+    def handle(self):
+        with open("a.txt", 'r') as file:
+            for line in file:
+                self.send(line)
 
 
 if __name__ == '__main__':
-    client_socket = socket()
-    client_socket.connect(("localhost", 12000))
-    with open("a.txt", 'r') as file:
-        for line in file:
-            SocketHelper.send(client_socket, line)
-    client_socket.close()
+    client = CSClient()
+    client.connect(("localhost", 12000))
+    client.handle()
+    client.disconnect()
