@@ -41,11 +41,11 @@ class ResponseHandler(HandlerBase):
     def disconnect(self):
         self.response.close()
 
-    def send(self, some_object):
-        return SocketHelper.send(self.response, some_object)
+    def send(self, some_object, coding='utf-8'):
+        return SocketHelper.send(self.response, some_object, coding)
 
-    def recv(self, buffersize):
-        return SocketHelper.recv(self.response, buffersize)
+    def recv(self, buffersize, coding='utf-8'):
+        return SocketHelper.recv(self.response, buffersize, coding)
 
 
 class RequestHandler(HandlerBase, socketserver.BaseRequestHandler):
@@ -56,11 +56,11 @@ class RequestHandler(HandlerBase, socketserver.BaseRequestHandler):
     def disconnect(self):
         self.request.close()
 
-    def send(self, some_object):
-        return SocketHelper.send(self.request, some_object)
+    def send(self, some_object, coding='utf-8'):
+        return SocketHelper.send(self.request, some_object, coding)
 
-    def recv(self, buffersize):
-        return SocketHelper.recv(self.request, buffersize)
+    def recv(self, buffersize, coding='utf-8'):
+        return SocketHelper.recv(self.request, buffersize, coding)
 
 
 if __name__ == '__main__':
