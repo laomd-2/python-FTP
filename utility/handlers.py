@@ -61,12 +61,3 @@ class RequestHandler(HandlerBase, socketserver.BaseRequestHandler):
 
     def recv(self, buffersize, coding='utf-8'):
         return SocketHelper.recv(self.request, buffersize, coding)
-
-
-if __name__ == '__main__':
-    client_socket = ResponseHandler()
-    client_socket.connect(("localhost", 12000))
-    with open("a.txt", 'r') as file:
-        for line in file:
-            SocketHelper.send(client_socket, line)
-    client_socket.disconnect()
