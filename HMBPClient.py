@@ -4,7 +4,6 @@ from utility.handlers import *
 
 
 class HMBPClient(ResponseHandler):
-    """docstring for Peer"""
 
     def __init__(self):
         super(HMBPClient, self).__init__()
@@ -14,37 +13,46 @@ class HMBPClient(ResponseHandler):
                          'download': 'download file in the server'}
 
     def handle(self):
-        while 1:
-            print('HMBPServer:>', end='')
-            ask_inf = input()
-            self.send(ask_inf)
-            if ask_inf.strip() == 'help':
-                self.showHelp()
-            elif ask_inf.strip() == 'quit':
-                self.shutDownConnect()
-            elif ask_inf.strip() == 'dir':
-                lists = self.dir()
-                for file_name in lists:
-                    print(file_name)
-            elif ask_inf.strip() == 'download':
-                file_name = input('Please input the filename:')
-                # absolute_path=input(
-                # '\nabsolute path you want to save this file:'
-                # )
-                self.download('./', file_name)
-            elif ask_inf.strip() == 'upload':
-                file_name = input('Please input the file name:')
-                self.upload('./', file_name)
+        while True:
+            ask_inf = input('HMBPClient:> ').strip()
+            if ask_inf == "quit":
+                self.send(ask_inf)
+                break
+            else:
+                func = getattr(self, ask_inf, None)
+                if func is not None:
+                    func()
+                else:
+                    print("Invalid command", ask_inf)
 
     def dir(self):
         """获取文件目录，
         返回文件名字符串列表"""
+        self.send("dir")
         tips_mes = self.recv(1024)
         print(tips_mes)
         lists = self.recv(1024)
-        return lists
+        for file_name in lists:
+            print(file_name)
 
-    def download(self, absolute_path='./', file_name='recv_file'):
+    def download(self):
+        self.send("download")
+        file_name = input('Please input the filename:')
+        # absolute_path=input(
+        # '\nabsolute path you want to save this file:'
+        # )
+        self._download('./', file_name)
+
+    def upload(self):
+        self.send("upload")
+        file_name = input('Please input the file name:')
+        self._upload('./', file_name)
+
+    def help(self):
+        for order, function in self.help_dic.items():
+            print("%-10s" % order, function)
+
+    def _download(self, absolute_path='./', file_name='recv_file'):
         """下载文件file_name到absolute_path，返回文件对象，没有该文件就抛异常"""
         # 交给服务器查找是否有该文件
         self.send(file_name)
@@ -72,10 +80,10 @@ class HMBPClient(ResponseHandler):
             fp.close()
             print('end receiving')
 
-    def upload(self, absolute_path='./', file_name=''):
+    def _upload(self, absolute_path, file_name):
         """上传文件，absolute_path：文件所在绝对路径，file_name:文件名字，返回是否上传成功"""
 
-        filepath = 'E:/new/' + file_name
+        filepath = absolute_path + file_name
         print(filepath)
         # os.stat() 方法用于在给定的路径上执行一个系统 stat 的调用,显示文件filepath信息
         file_size = os.stat(filepath).st_size
@@ -92,17 +100,9 @@ class HMBPClient(ResponseHandler):
                 break
             self.send(data)  # 发送文件内容
 
-    def shutDownConnect(self):
-        self.response.close()
-        exit(1)
-
-    def showHelp(self):
-        for order, function in self.help_dic.items():
-            print("%-10s" % order, function)
-
 
 if __name__ == '__main__':
     client = HMBPClient()
-    client.connect(('172.18.32.225', 12000))
+    client.connect(('localhost', 12000))
     client.handle()
     client.disconnect()
