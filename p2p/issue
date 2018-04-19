@@ -1,0 +1,34 @@
+# P2P协议的理解，弱化了server-client的概念，在网络中，每个节点都可能是server，也可能是client
+共享目录：在网络中存在n台机器，每台服务器都有一个可供其他服务器访问的目录（目录下面有各种文件）
+在线节点列表：每天机器都有一个所有愿意共项目录的服务器列表
+
+1. client向服务器A发起寻找文件test的请求
+2. A现在自己的目录下面寻找是否有test
+3. 如果有则返回该文件给client，程序结束
+4. 如果A服务器没有，则A遍历在线节点列表
+5. 如果找到，返回给client，结束
+6. 如果没有，返回空
+
+服务器应该能更新在线节点列表
+如果在线节点很多，是不是应该一直寻找下去（设置一个查找深度）
+服务器查询某个文件是否存在
+服务器可以下载某一个文件到自己的共享目录
+
+
+
+
+# xml_rpc原理
+在server A定义方法method
+在client使用A的proxy调用method
+
+
+# 线程死锁
+server A的url list里面有Server B
+server B的url list里面有Server A
+当A请求B的时候，B发现自己也没有，B根据url list查询其他server，这个时候根据list需要去查询A
+但是这个时候A正在等待B的回应，所以就造成了
+A等B，B等A的死锁情况
+
+# 解决死锁
+每个server B在向url list里面的server A发出请求之前判断本神是否是Server A正在请求B
+
