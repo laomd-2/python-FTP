@@ -1,6 +1,6 @@
 import socket
 from .SocketHelper import SocketHelper
-import socketserver
+from socketserver import *
 from abc import ABCMeta, abstractmethod
 
 
@@ -33,22 +33,27 @@ class HandlerBase(object):
 class ResponseHandler(HandlerBase):
 
     def __init__(self):
-        self.response = socket.socket()
+        self.client = socket.socket()
 
     def connect(self, address):
-        self.response.connect(address)
+        self.client.connect(address)
 
     def disconnect(self):
-        self.response.close()
+        self.client.close()
 
     def send(self, some_object, coding='utf-8'):
-        return SocketHelper.send(self.response, some_object, coding)
+        return SocketHelper.send(self.client, some_object, coding)
 
     def recv(self, buffersize, coding='utf-8'):
-        return SocketHelper.recv(self.response, buffersize, coding)
+        return SocketHelper.recv(self.client, buffersize, coding)
 
 
-class RequestHandler(HandlerBase, socketserver.BaseRequestHandler):
+class RequestHandler(BaseRequestHandler):
+    def handle(self):
+        pass
+
+    def finish(self):
+        pass
 
     def connect(self, address):
         self.request.connect(address)
@@ -61,12 +66,3 @@ class RequestHandler(HandlerBase, socketserver.BaseRequestHandler):
 
     def recv(self, buffersize, coding='utf-8'):
         return SocketHelper.recv(self.request, buffersize, coding)
-
-
-if __name__ == '__main__':
-    client_socket = ResponseHandler()
-    client_socket.connect(("localhost", 12000))
-    with open("a.txt", 'r') as file:
-        for line in file:
-            SocketHelper.send(client_socket, line)
-    client_socket.disconnect()
