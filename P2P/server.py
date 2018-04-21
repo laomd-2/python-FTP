@@ -3,6 +3,7 @@ from xmlrpc.client import ServerProxy, Fault
 from os.path import join, abspath, isfile
 import sys
 import urllib
+import time
 
 
 SimpleXMLRPCServer.allow_reuse_address = 1
@@ -36,6 +37,13 @@ def getPort(url):
     return int(patrs[-1])
 
 
+class BinaryServerProxy(ServerProxy):
+    """docstring for BinaryServerProxy"""
+
+    def __init__(self, url):
+        super(BinaryServerProxy, self).__init__(url, use_builtin_types=True)
+
+
 class Node:
 
     def __init__(self, url, dirname, secret):
@@ -52,7 +60,8 @@ class Node:
             history = history + [self.url]
             if len(history) >= MAX_HISTORY_LENGTH:
                 raise
-            print("file", query, "not exist local, start to search others")
+            print("file", query,
+                  "not exist local, start to search others")
             return self._broadcast(query, history)
 
     def hello(self, other):
@@ -67,26 +76,28 @@ class Node:
         print("fetching", query)
         result = self.query(query)
         print("succeeded" if result else "failed", "to fetch", query)
-        f = open(join(self.dirname, query), 'w')
+        f = open(join(self.dirname, query), 'wb')
         f.write(result)
         f.close()
         return 0
 
     def _start(self):
-        print("starting up server", self.url, "...")
+        print("starting up server",
+              self.url, "...")
         s = SimpleXMLRPCServer(("", getPort(self.url)), logRequests=False)
         s.register_instance(self)
-        print("server", self.url, "succeeded to start up. Ready to serve.")
+        print("server", self.url,
+              "succeeded to start up. Ready to serve.")
         s.serve_forever()
 
     def _handle(self, query):
-        dir = self.dirname
-        name = join(dir, query)
+        file_dir = self.dirname
+        name = join(file_dir, query)
         if not isfile(name):
             raise UnhandledQuery
-        if not inside(dir, name):
+        if not inside(file_dir, name):
             raise AccessDenied
-        return open(name).read()
+        return open(name, 'rb').read()
 
     def _broadcast(self, query, history):
         for other in self.known.copy():
@@ -94,22 +105,21 @@ class Node:
                 continue
             try:
                 print("search", other)
-                s = ServerProxy(other)
+                s = BinaryServerProxy(other)
                 print("start to query", other)
                 return s.query(query, history)
-            except Fault:
-                self.known.remove(other)
-                # if Fault.faultCode == UNHANDLED: pass
-                # else: self.known.remove(other)
             except:
-                self.known.remove(other)
+                pass
         raise UnhandledQuery
 
 
 def main():
     url, directory, secret = sys.argv[1:]
-    n = Node(url, directory, secret)
-    n._start()
+    try:
+        n = Node(url, directory, secret)
+        n._start()
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == '__main__':

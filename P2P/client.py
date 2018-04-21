@@ -1,8 +1,7 @@
-from xmlrpc.client import ServerProxy, Fault
 from cmd import Cmd
 from random import choice
 from string import ascii_lowercase
-from server import Node
+from server import Node, BinaryServerProxy
 from threading import Thread
 from time import sleep
 import sys
@@ -32,18 +31,19 @@ class Client(Cmd):
         t.setDaemon(1)
         t.start()
         sleep(HEAD_START)
-        self.server = ServerProxy(url)
+        # The use_builtin_types flag can be used to
+        # cause date/time values to be presented as datetime.datetime objects
+        # and binary data to be presented as bytes objects;
+        # this flag is false by default.
+        # datetime.datetime, bytes and bytearray objects
+        # may be passed to calls.
+        self.server = BinaryServerProxy(url)
         for line in open(urlfile):
             line = line.strip()
             self.server.hello(line)
 
     def do_fetch(self, arg):
-        try:
-            print("fetching", arg)
-            self.server.fetch(arg, self.secret)
-        except Fault:
-            # if f.faultCode != UNHANDLED : raise
-            print("couldn't find the file", arg)
+        self.server.fetch(arg, self.secret)
 
     def do_exit(self, arg):
         print("Goodbye!")
@@ -54,8 +54,11 @@ class Client(Cmd):
 
 def main():
     urlfile, directory, url = sys.argv[1:]
-    client = Client(url, directory, urlfile)
-    client.cmdloop()
+    try:
+        client = Client(url, directory, urlfile)
+        client.cmdloop()
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == '__main__':
