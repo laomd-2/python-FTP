@@ -1,5 +1,7 @@
 from serverbase import ServerBase, BinaryServerProxy
-import sys
+
+
+TRACKER_URL = "http://localhost:12000"
 
 
 class Tracker(ServerBase):
@@ -10,6 +12,7 @@ class Tracker(ServerBase):
 
     def query(self, filename, from_url):
         connected = []
+        length = 0
         for url in self.known.copy():
             if url == from_url:
                 continue
@@ -17,6 +20,7 @@ class Tracker(ServerBase):
             try:
                 s = BinaryServerProxy(url)
                 if s.hasFile(filename):
+                    length = s.bytesLength(filename)
                     print("founded in", url)
                     connected.append(url)
             except ConnectionRefusedError:
@@ -24,13 +28,12 @@ class Tracker(ServerBase):
                 self.known.remove(url)
             except:
                 pass
-        return connected
+        return length, connected
 
 
 def main():
-    url = sys.argv[1]
     try:
-        n = Tracker(url)
+        n = Tracker(TRACKER_URL)
         n._start()
     except KeyboardInterrupt:
         pass
