@@ -1,122 +1,75 @@
 from xmlrpc.server import SimpleXMLRPCServer
-from xmlrpc.client import ServerProxy, Fault
+from serverbase import ServerBase, BinaryServerProxy
 from os.path import join, abspath, isfile
+from handleFault import AccessDenied, UnhandledQuery
 import sys
-import urllib
 import time
 
 
 SimpleXMLRPCServer.allow_reuse_address = 1
-MAX_HISTORY_LENGTH = 6
-
-UNHANDLED = 100
-ACCESS_ENIED = 200
 
 
-class UnhandledQuery(Fault):
+class Node(ServerBase):
 
-    def __init__(self, message="Couldn't handle the query"):
-        Fault.__init__(self, UNHANDLED, message)
+    MAX_HISTORY_LENGTH = 6
 
-
-class AccessDenied(Fault):
-
-    def __init__(self, message="Access denied"):
-        Fault.__init__(self, ACCESS_ENIED, message)
-
-
-def inside(dir, name):
-    dir = abspath(dir)
-    name = abspath(name)
-    return name.startswith(join(dir, ''))
-
-
-def getPort(url):
-    name = urllib.parse.urlparse(url)[1]
-    patrs = name.split(':')
-    return int(patrs[-1])
-
-
-class BinaryServerProxy(ServerProxy):
-    """docstring for BinaryServerProxy"""
-
-    def __init__(self, url):
-        super(BinaryServerProxy, self).__init__(url, use_builtin_types=True)
-
-
-class Node:
-
-    def __init__(self, url, dirname, secret):
-        self.url = url
+    def __init__(self, url, tracker_url, dirname):
+        super(Node, self).__init__(url)
+        self.tracker_url = tracker_url
         self.dirname = dirname
-        self.secret = secret
-        self.known = set()
 
-    def query(self, query, history=[]):
-        try:
-            print("search local", end="\nHMBP:~ ")
-            return self._handle(query)
-        except UnhandledQuery:
-            history = history + [self.url]
-            if len(history) >= MAX_HISTORY_LENGTH:
-                raise
-            print("file", query,
-                  "not exist local, start to search others")
-            return self._broadcast(query, history)
+    def onStart(self):
+        self.tracker = BinaryServerProxy(self.tracker_url)
+        self.tracker.hello(self.url)
 
-    def hello(self, other):
-        print("say hello to", other)
-        self.known.add(other)
+    def query(self, filename):
+        if self.hasFile(filename):
+            ans = input(
+                filename + " has been in local directory." +
+                "Do you want to update it ?(y/n)")
+            if ans == 'n':
+                return None
+        else:
+            print("couldn't find", filename, "in local directory")
+        return self._queryOther(filename)
+
+    def fetch(self, filename):
+        print("fetching", filename)
+        result = self.query(filename)
+        if result:
+            f = open(join(self.dirname, filename), 'wb')
+            f.write(result)
+            f.close()
+        print("done")
         return 0
 
-    def fetch(self, query, secret):
-        print("server.fetch")
-        if secret != self.secret:
-            raise AccessDenied
-        print("fetching", query)
-        result = self.query(query)
-        print("succeeded" if result else "failed", "to fetch", query)
-        f = open(join(self.dirname, query), 'wb')
-        f.write(result)
-        f.close()
-        return 0
-
-    def _start(self):
-        print("starting up server",
-              self.url, "...")
-        s = SimpleXMLRPCServer(("", getPort(self.url)), logRequests=False)
-        s.register_instance(self)
-        print("server", self.url,
-              "succeeded to start up. Ready to serve.")
-        s.serve_forever()
-
-    def _handle(self, query):
+    def hasFile(self, filename):
         file_dir = self.dirname
-        name = join(file_dir, query)
-        if not isfile(name):
-            raise UnhandledQuery
-        if not inside(file_dir, name):
-            raise AccessDenied
-        return open(name, 'rb').read()
+        filename = join(file_dir, filename)
+        res = isfile(filename)
+        return res
 
-    def _broadcast(self, query, history):
-        for other in self.known.copy():
-            if other in history:
-                continue
+    def queryLocal(self, filename):
+        print("search local", end="HMBP:~ ")
+        return open(join(self.dirname, filename), 'rb').read()
+
+    def _queryOther(self, filename):
+        print("start to search others...")
+        known = self.tracker.query(filename, self.url)
+        for other in known:
             try:
-                print("search", other)
+                print("fetching from", other)
                 s = BinaryServerProxy(other)
-                print("start to query", other)
-                return s.query(query, history)
+                return s.queryLocal(filename)
             except:
                 pass
         raise UnhandledQuery
 
 
 def main():
-    url, directory, secret = sys.argv[1:]
+    url, tracker_url, directory = sys.argv[1:]
     try:
-        n = Node(url, directory, secret)
+        n = Node(url, tracker_url, directory)
         n._start()
     except KeyboardInterrupt:
         pass
