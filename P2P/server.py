@@ -1,11 +1,9 @@
 from xmlrpc.server import SimpleXMLRPCServer
-from serverbase import ServerBase, BinaryServerProxy
-from os.path import join, abspath, isfile
+from serverbase import ServerBase, BinaryServerProxy, getAddr
+from os.path import join
 from handleFault import UnhandledQuery
 from tracker import TRACKER_URL
 import sys
-import time
-import socket
 from random import randint
 
 
@@ -17,10 +15,7 @@ class Node(ServerBase):
     MAX_HISTORY_LENGTH = 6
 
     def __init__(self, dirname):
-        # 获取本机电脑名
-        myname = socket.getfqdn(socket.gethostname())
-        # 获取本机ip
-        myaddr = socket.gethostbyname(myname)
+        myaddr = getAddr()
         self.url = "http://" + myaddr + ":" + str(randint(12000, 13000))
         super(Node, self).__init__(self.url)
         self.dirname = dirname
@@ -36,8 +31,8 @@ class Node(ServerBase):
                 "Do you want to update it ?(y/n)")
             if ans == 'n':
                 return None
-        else:
-            print("couldn't find", filename, "in local directory")
+        # else:
+        #     print("couldn't find", filename, "in local directory")
         return self._queryOther(filename)
 
     def fetch(self, filename):
@@ -48,7 +43,7 @@ class Node(ServerBase):
             for block in result:
                 f.write(block)
             f.close()
-        print("done")
+            print("done")
         return 0
 
     def hasFile(self, filename):
@@ -72,8 +67,10 @@ class Node(ServerBase):
     def _queryOther(self, filename):
         print("start to search others...")
         total_length, known = self.tracker.query(filename, self.url)
-        try:
-            num = len(known)
+        num = len(known)
+        if num == 0:
+            raise UnhandledQuery
+        else:
             length = total_length // num
             begin = 0
             if not total_length % num == 0:
@@ -90,9 +87,6 @@ class Node(ServerBase):
                 begin = tmp_len
             print("fetch from", num, "nodes")
             return total
-        except ZeroDivisionError:
-            print("zero")
-            raise UnhandledQuery
 
 
 def main():

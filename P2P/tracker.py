@@ -1,7 +1,7 @@
 from serverbase import ServerBase, BinaryServerProxy
 
 
-TRACKER_URL = "http://localhost:12000"
+TRACKER_URL = "http://172.18.35.248:12000"
 
 
 class Tracker(ServerBase):

@@ -3,6 +3,7 @@ from server import Node, BinaryServerProxy
 from threading import Thread
 from time import sleep
 import sys
+from handleFault import Fault
 
 
 HEAD_START = 0.1  # Seconds
@@ -22,10 +23,10 @@ class Client(Cmd):
         self.server = BinaryServerProxy(n.url)
 
     def do_fetch(self, arg):
-        # try:
-        self.server.fetch(arg)
-        # except:
-        #     print("failed to fetch", arg)
+        try:
+            self.server.fetch(arg)
+        except Fault:
+            print("failed to fetch", arg)
 
     def do_exit(self, arg):
         print("Goodbye!")
