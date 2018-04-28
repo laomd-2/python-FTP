@@ -1,5 +1,6 @@
 from cmd import Cmd
-from server import Peer, BinaryServerProxy
+from serverbase import BinaryServerProxy
+from peer import Peer
 from threading import Thread
 from time import sleep
 import sys

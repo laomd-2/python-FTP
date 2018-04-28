@@ -10,14 +10,14 @@ from random import randint
 SimpleXMLRPCServer.allow_reuse_address = 1
 
 
-class Node(ServerBase):
+class Peer(ServerBase):
 
     MAX_HISTORY_LENGTH = 6
 
     def __init__(self, dirname):
         myaddr = getAddr()
         self.url = "http://" + myaddr + ":" + str(randint(12000, 13000))
-        super(Node, self).__init__(self.url)
+        super(Peer, self).__init__(self.url)
         self.dirname = dirname
 
     def onStart(self):
@@ -83,14 +83,14 @@ class Node(ServerBase):
                     tmp_len = total_length
                 print("fetched", other, "[", begin, ',', tmp_len, ')')
                 begin = tmp_len
-            print("fetch from", num, "nodes")
+            print("fetch from", num, "peers")
             return total
 
 
 def main():
     directory = sys.argv[1]
     try:
-        n = Node(directory)
+        n = Peer(directory)
         n._start()
     except KeyboardInterrupt:
         pass
