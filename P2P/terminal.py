@@ -1,5 +1,5 @@
 from cmd import Cmd
-from server import Node, BinaryServerProxy
+from server import Peer, BinaryServerProxy
 from threading import Thread
 from time import sleep
 import sys
@@ -9,22 +9,22 @@ from handleFault import Fault
 HEAD_START = 0.1  # Seconds
 
 
-class Client(Cmd):
+class Terminal(Cmd):
     prompt = 'HMBP:~ '
 
     def __init__(self, dirname):
         print("Welcome to HMBP!")
         Cmd.__init__(self)
-        n = Node(dirname)
+        n = Peer(dirname)
         t = Thread(target=n._start)
         t.setDaemon(1)
         t.start()
         sleep(HEAD_START)
-        self.server = BinaryServerProxy(n.url)
+        self.peer = BinaryServerProxy(n.url)
 
     def do_fetch(self, arg):
         try:
-            self.server.fetch(arg)
+            self.peer.fetch(arg)
         except Fault:
             print("failed to fetch", arg)
 
@@ -38,7 +38,7 @@ class Client(Cmd):
 def main():
     directory = sys.argv[1]
     try:
-        client = Client(directory)
+        client = Terminal(directory)
         client.cmdloop()
     except KeyboardInterrupt:
         pass

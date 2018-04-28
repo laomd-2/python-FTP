@@ -31,9 +31,7 @@ class Node(ServerBase):
                 "Do you want to update it ?(y/n)")
             if ans == 'n':
                 return None
-        # else:
-        #     print("couldn't find", filename, "in local directory")
-        return self._queryOther(filename)
+        return self._fetchFromOthers(filename)
 
     def fetch(self, filename):
         print("fetching", filename)
@@ -58,13 +56,13 @@ class Node(ServerBase):
         except FileNotFoundError:
             return 0
 
-    def queryLocal(self, filename, start, length):
+    def send(self, filename, start, length):
         print("sending", filename, '[', start, ',',
               start + length, ')', end="\nHMBP:~ ")
         return open(join(self.dirname, filename), 'rb') \
             .read()[start: start + length]
 
-    def _queryOther(self, filename):
+    def _fetchFromOthers(self, filename):
         print("start to search others...")
         total_length, known = self.tracker.query(filename, self.url)
         num = len(known)
@@ -78,7 +76,7 @@ class Node(ServerBase):
             total = []
             for other in known:
                 s = BinaryServerProxy(other)
-                a = s.queryLocal(filename, begin, length)
+                a = s.send(filename, begin, length)
                 total.append(a)
                 tmp_len = begin + length
                 if tmp_len > total_length:
