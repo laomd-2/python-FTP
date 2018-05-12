@@ -1,4 +1,4 @@
-from serverbase import ServerBase, BinaryServerProxy
+from p2p.server.serverbase import ServerBase, BinaryServerProxy
 
 
 TRACKER_URL = "http://172.18.35.248:12000"

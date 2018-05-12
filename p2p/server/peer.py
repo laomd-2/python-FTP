@@ -1,10 +1,10 @@
 from xmlrpc.server import SimpleXMLRPCServer
-from serverbase import ServerBase, BinaryServerProxy, getAddr
+from p2p.client.handleFault import UnhandledQuery
+from p2p.server.tracker import TRACKER_URL
+from p2p.server.serverbase import ServerBase, BinaryServerProxy, getAddr
 from os.path import join
-from handleFault import UnhandledQuery
-from tracker import TRACKER_URL
-import sys
 from random import randint
+import sys
 
 
 SimpleXMLRPCServer.allow_reuse_address = 1

@@ -1,10 +1,10 @@
 from cmd import Cmd
-from serverbase import BinaryServerProxy
-from peer import Peer
+from p2p.server.serverbase import BinaryServerProxy
+from p2p.server.peer import Peer
+from p2p.client.handleFault import Fault
 from threading import Thread
 from time import sleep
 import sys
-from handleFault import Fault
 
 
 HEAD_START = 0.1  # Seconds
@@ -24,10 +24,10 @@ class Terminal(Cmd):
         self.peer = BinaryServerProxy(n.url)
 
     def do_fetch(self, arg):
-        # try:
+        try:
             self.peer.fetch(arg)
-        # except Fault:
-        #     print("failed to fetch", arg)
+        except Fault as f:
+            print("failed to fetch", arg, f)
 
     def do_exit(self, arg):
         print("Goodbye!")

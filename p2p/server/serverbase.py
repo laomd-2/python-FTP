@@ -1,7 +1,6 @@
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.client import ServerProxy
-import urllib
-import socket
+import urllib, socket
 
 # The use_builtin_types flag can be used to
 # cause date/time values to be presented as datetime.datetime objects
@@ -9,7 +8,6 @@ import socket
 # this flag is false by default.
 # datetime.datetime, bytes and bytearray objects
 # may be passed to calls.
-
 
 def getAddr():
     try:
