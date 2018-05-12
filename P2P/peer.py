@@ -18,6 +18,10 @@ class Peer(ServerBase):
         myaddr = getAddr()
         self.url = "http://" + myaddr + ":" + str(randint(12000, 13000))
         super(Peer, self).__init__(self.url)
+        self.register_function(self.fetch)
+        self.register_function(self.send)
+        self.register_function(self.hasFile)
+        self.register_function(self.bytesLength)
         self.dirname = dirname
 
     def onStart(self):

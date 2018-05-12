@@ -27,21 +27,21 @@ class BinaryServerProxy(ServerProxy):
         super(BinaryServerProxy, self).__init__(url, use_builtin_types=True)
 
 
-class ServerBase(object):
-    SECRET_LENFGTH = 100
+class ServerBase(SimpleXMLRPCServer):
 
     def __init__(self, url):
         self.url = url
+        super(ServerBase, self).__init__(("", self.getPort(self.url)), logRequests=False)
+        self.register_function(self.hello)
+        self.register_function(self.query)
 
     def _start(self):
         print("starting up server",
               self.url, "...")
-        s = SimpleXMLRPCServer(("", self.getPort(self.url)), logRequests=False)
-        s.register_instance(self)
         self.onStart()
         print("server", self.url,
               "succeeded to start up. Ready to serve.")
-        s.serve_forever()
+        self.serve_forever()
 
     def onStart(self):
         pass

@@ -24,10 +24,10 @@ class Terminal(Cmd):
         self.peer = BinaryServerProxy(n.url)
 
     def do_fetch(self, arg):
-        try:
+        # try:
             self.peer.fetch(arg)
-        except Fault:
-            print("failed to fetch", arg)
+        # except Fault:
+        #     print("failed to fetch", arg)
 
     def do_exit(self, arg):
         print("Goodbye!")
